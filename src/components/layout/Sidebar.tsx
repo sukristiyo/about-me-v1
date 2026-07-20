@@ -190,7 +190,7 @@ export default function Sidebar({ settings, socialLinks, mobile = false }: Sideb
               href={settings.cvUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[var(--gold)] to-amber-600 text-black font-semibold hover:opacity-90 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-all duration-300"
+              className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl bg-[var(--gold)] text-white font-medium hover:opacity-90 hover:-translate-y-0.5 shadow-lg shadow-[var(--gold)]/20 transition-all duration-300"
             >
               <LucideIcons.Download className="w-5 h-5" />
               <span>Download CV</span>
