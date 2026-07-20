@@ -101,7 +101,7 @@ export default function Sidebar({ settings, socialLinks, mobile = false }: Sideb
           {/* Subtitle badge */}
           <motion.div variants={itemVariants}>
             <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-[var(--gold-muted)] text-[var(--gold)] border border-[var(--gold)]/20">
-              {subtitle.split(/[·|]/)[0]?.trim() || subtitle}
+              {subtitle}
             </span>
           </motion.div>
         </motion.div>
