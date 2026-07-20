@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     const service = await prisma.service.create({ data: parsed.data })
-    revalidatePath('/about');
+    revalidatePath('/', 'layout');
     return NextResponse.json(service, { status: 201 })
   } catch (error) {
     console.error('[POST /api/services]', error)

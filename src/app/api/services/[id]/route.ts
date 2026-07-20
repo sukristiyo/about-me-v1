@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       data: parsed.data,
     })
 
-    revalidatePath('/about')
+    revalidatePath('/', 'layout');
     return NextResponse.json(item)
   } catch (error) {
     console.error('[PATCH /api/services/[id]]', error)
@@ -48,7 +48,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     await prisma.service.delete({
       where: { id },
     })
-    revalidatePath('/about');
+    revalidatePath('/', 'layout');
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('[DELETE /api/services/[id]]', error)

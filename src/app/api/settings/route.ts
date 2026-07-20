@@ -108,9 +108,7 @@ export async function PATCH(request: Request) {
         data: { ...defaultSettings, ...dataToSave },
       })
     }
-    revalidatePath('/about');
-    revalidatePath('/');
-    revalidatePath('/admin', 'layout');
+    revalidatePath('/', 'layout');
 
     return NextResponse.json(settings)
   } catch (error) {
