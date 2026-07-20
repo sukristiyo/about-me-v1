@@ -95,5 +95,33 @@ export default async function BlogDetailPage({ params }: PageProps) {
     updatedAt: post.updatedAt.toISOString(),
   }
 
-  return <BlogDetailClient post={serializedPost} readingTime={readingTime} />
+  const title = locale === 'id' ? post.titleId || post.title : post.title
+  const description = locale === 'id' ? post.excerptId || post.excerptEn : post.excerptEn
+  const siteUrl = 'https://sukristiyo.my.id'
+  const postUrl = `${siteUrl}/${locale}/blog/${slug}`
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    description: description,
+    image: post.thumbnailUrl ? [post.thumbnailUrl] : [],
+    datePublished: post.publishedAt?.toISOString() || post.createdAt.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    author: [{
+      '@type': 'Person',
+      name: 'Sukristiyo',
+      url: siteUrl
+    }]
+  }
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <BlogDetailClient post={serializedPost} readingTime={readingTime} />
+    </>
+  )
 }

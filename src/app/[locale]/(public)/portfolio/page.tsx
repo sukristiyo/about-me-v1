@@ -21,8 +21,37 @@ async function getPortfolioProjects() {
   }
 }
 
-export default async function PortfolioPage() {
+export default async function PortfolioPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
   const projects = await getPortfolioProjects()
 
-  return <PortfolioClient projects={projects} />
+  const siteUrl = 'https://sukristiyo.my.id'
+  const isId = locale === 'id'
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: isId ? 'Portofolio | Sukristiyo' : 'Portfolio | Sukristiyo',
+    description: isId 
+      ? 'Jelajahi proyek terbaru, aplikasi web, dan implementasi infrastruktur oleh Sukristiyo.' 
+      : 'Explore recent projects, web applications, and infrastructure implementations by Sukristiyo.',
+    url: `${siteUrl}/${locale}/portfolio`,
+    hasPart: projects.map(project => ({
+      '@type': 'CreativeWork',
+      name: project.title,
+      description: isId ? project.descriptionId || project.descriptionEn : project.descriptionEn,
+      image: project.thumbnailUrl || undefined,
+      url: project.liveUrl || project.repoUrl || `${siteUrl}/${locale}/portfolio`,
+    }))
+  }
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <PortfolioClient projects={projects} />
+    </>
+  )
 }
