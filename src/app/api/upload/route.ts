@@ -2,8 +2,8 @@ import { auth } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-const MAX_SIZE_BYTES = 2 * 1024 * 1024 // 2MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf']
+const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
 
 export async function POST(request: Request) {
   try {
@@ -25,14 +25,14 @@ export async function POST(request: Request) {
 
     if (!ALLOWED_TYPES.includes(uploadedFile.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only jpg, png, webp, and gif are allowed. Found: ' + uploadedFile.type },
+        { error: 'Invalid file type. Only jpg, png, webp, gif, and pdf are allowed. Found: ' + uploadedFile.type },
         { status: 400 }
       )
     }
 
     if (uploadedFile.size > MAX_SIZE_BYTES) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 2MB.' },
+        { error: 'File too large. Maximum size is 5MB.' },
         { status: 400 }
       )
     }

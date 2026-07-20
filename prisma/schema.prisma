@@ -39,6 +39,7 @@ model SiteSettings {
   twitterUrl      String?
   instagramUrl    String?
   facebookUrl     String?
+  cvUrl           String?
   updatedAt       DateTime @updatedAt
 }
 

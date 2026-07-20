@@ -23,6 +23,7 @@ const settingsSchema = z.object({
   birthDate: z.string().optional(),
   location: z.string().optional(),
   subtitleEn: z.string().optional(),
+  cvUrl: z.string().optional(),
 });
 
 export default function SettingsPage() {
@@ -40,6 +41,7 @@ export default function SettingsPage() {
       birthDate: "",
       location: "",
       subtitleEn: "",
+      cvUrl: "",
     },
   });
 
@@ -60,6 +62,7 @@ export default function SettingsPage() {
               birthDate: data.birthDate || "",
               location: data.location || "",
               subtitleEn: data.subtitleEn || "",
+              cvUrl: data.cvUrl || "",
             });
           }
         }
@@ -122,6 +125,38 @@ export default function SettingsPage() {
   }
 
   const profilePhotoUrl = form.watch("profilePhotoUrl");
+  const cvUrl = form.watch("cvUrl");
+  const [isUploadingCv, setIsUploadingCv] = useState(false);
+
+  async function handleCvUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", "cv");
+
+    setIsUploadingCv(true);
+    try {
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || "Upload failed");
+      }
+      
+      const data = await res.json();
+      form.setValue("cvUrl", data.url, { shouldDirty: true });
+      toast.success("CV uploaded successfully");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload CV");
+    } finally {
+      setIsUploadingCv(false);
+    }
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -155,6 +190,38 @@ export default function SettingsPage() {
                   This photo will be displayed on your portfolio and dashboard. Click the image to upload a new one.
                 </p>
                 {isUploading && <span className="text-xs text-primary flex items-center gap-1 justify-center md:justify-start mt-2"><Loader2 className="h-3 w-3 animate-spin" /> Uploading...</span>}
+              </div>
+            </div>
+
+            {/* CV Upload */}
+            <div className="flex flex-col md:flex-row items-center gap-8 pb-8 border-b border-border">
+              <div className="relative h-24 w-24 rounded-2xl overflow-hidden border-2 border-border bg-muted flex items-center justify-center group shadow-xl shrink-0">
+                {cvUrl ? (
+                  <div className="flex flex-col items-center justify-center w-full h-full bg-primary/10">
+                    <Save className="h-8 w-8 text-primary mb-1" />
+                    <span className="text-[10px] font-bold text-primary">PDF READY</span>
+                  </div>
+                ) : (
+                  <Save className="h-8 w-8 text-zinc-600" />
+                )}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <label className="cursor-pointer">
+                    <Upload className="h-6 w-6 text-white hover:scale-110 transition-transform" />
+                    <input type="file" className="hidden" accept="application/pdf" onChange={handleCvUpload} disabled={isUploadingCv} />
+                  </label>
+                </div>
+              </div>
+              <div className="flex-1 space-y-2 text-center md:text-left">
+                <h3 className="text-lg font-medium text-foreground">Resume / CV (PDF)</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto md:mx-0">
+                  Upload your CV in PDF format. A download button will appear in your sidebar. Maximum 5MB.
+                </p>
+                {cvUrl && (
+                  <a href={cvUrl} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-2">
+                    View Current CV
+                  </a>
+                )}
+                {isUploadingCv && <span className="text-xs text-primary flex items-center gap-1 justify-center md:justify-start mt-2"><Loader2 className="h-3 w-3 animate-spin" /> Uploading...</span>}
               </div>
             </div>
 

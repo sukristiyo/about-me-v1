@@ -21,6 +21,7 @@ const defaultSettings = {
   twitterUrl: null,
   instagramUrl: null,
   facebookUrl: null,
+  cvUrl: null,
 }
 
 const settingsPatchSchema = z.object({
@@ -42,6 +43,7 @@ const settingsPatchSchema = z.object({
   twitterUrl: z.string().url().optional().or(z.literal('')),
   instagramUrl: z.string().url().optional().or(z.literal('')),
   facebookUrl: z.string().url().optional().or(z.literal('')),
+  cvUrl: z.string().url().optional().or(z.literal('')),
 })
 
 export async function GET() {
