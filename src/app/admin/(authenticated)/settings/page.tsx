@@ -22,6 +22,7 @@ const settingsSchema = z.object({
   phone: z.string().optional(),
   birthDate: z.string().optional(),
   location: z.string().optional(),
+  subtitleEn: z.string().optional(),
 });
 
 export default function SettingsPage() {
@@ -38,6 +39,7 @@ export default function SettingsPage() {
       phone: "",
       birthDate: "",
       location: "",
+      subtitleEn: "",
     },
   });
 
@@ -57,6 +59,7 @@ export default function SettingsPage() {
               phone: data.phone || "",
               birthDate: data.birthDate || "",
               location: data.location || "",
+              subtitleEn: data.subtitleEn || "",
             });
           }
         }
@@ -165,6 +168,20 @@ export default function SettingsPage() {
                       <FormLabel className="text-muted-foreground">Site Name</FormLabel>
                       <FormControl>
                         <Input placeholder="John Doe's Portfolio" className="bg-muted border-border text-foreground focus-visible:ring-primary h-12" {...field} />
+                      </FormControl>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="subtitleEn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-muted-foreground">Subtitle / Job Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="DevOps · SRE · Cloud Engineer" className="bg-muted border-border text-foreground focus-visible:ring-primary h-12" {...field} />
                       </FormControl>
                       <FormMessage className="text-red-400" />
                     </FormItem>
