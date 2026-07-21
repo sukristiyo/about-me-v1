@@ -17,6 +17,12 @@ import {
 import * as LucideIcons from 'lucide-react'
 import { useLocale, useTranslations } from 'next-intl'
 import type { SiteSettings, SocialLink } from '@prisma/client'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface SidebarProps {
   settings: SiteSettings | null
@@ -182,22 +188,45 @@ export default function Sidebar({ settings, socialLinks, mobile = false }: Sideb
       )}
 
       {/* Download CV Button */}
-      {settings?.cvUrl && (
-        <>
-          <motion.div variants={itemVariants} className="border-t border-[var(--border)] my-5" />
-          <motion.div variants={itemVariants}>
-            <a
-              href={settings.cvUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl bg-[var(--gold)] text-white font-medium hover:opacity-90 hover:-translate-y-0.5 shadow-lg shadow-[var(--gold)]/20 transition-all duration-300"
-            >
-              <LucideIcons.Download className="w-5 h-5" />
-              <span>Download CV</span>
-            </a>
-          </motion.div>
-        </>
-      )}
+      {/* We always show this section because we have the Generate PDF option */}
+      <motion.div variants={itemVariants} className="border-t border-[var(--border)] my-5" />
+      <motion.div variants={itemVariants}>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl bg-[var(--gold)] text-white font-medium hover:opacity-90 hover:-translate-y-0.5 shadow-lg shadow-[var(--gold)]/20 transition-all duration-300"
+          >
+            <LucideIcons.Download className="w-5 h-5" />
+            <span>{isId ? 'Unduh CV' : 'Download CV'}</span>
+            <LucideIcons.ChevronDown className="w-4 h-4 ml-1 opacity-70" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-[calc(100%-48px)] max-w-[240px] rounded-xl border-[var(--border)] bg-[var(--card)] p-2 shadow-xl" sideOffset={8}>
+            {settings?.cvUrl && (
+              <a href={settings.cvUrl} target="_blank" rel="noopener noreferrer" className="outline-none">
+                <DropdownMenuItem className="rounded-lg cursor-pointer py-3 px-3 hover:bg-[var(--accent)] focus:bg-[var(--accent)] flex items-center gap-3 w-full">
+                  <div className="p-2 bg-[var(--gold)]/10 text-[var(--gold)] rounded-lg">
+                    <LucideIcons.FileUp className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-[var(--foreground)]">{isId ? 'File CV Asli' : 'Original CV File'}</span>
+                    <span className="text-[10px] text-[var(--muted-foreground)]">{isId ? 'Manual upload CV' : 'Manually uploaded CV'}</span>
+                  </div>
+                </DropdownMenuItem>
+              </a>
+            )}
+            <Link href={`/${locale}/cv-print`} target="_blank" className="outline-none">
+              <DropdownMenuItem className="rounded-lg cursor-pointer py-3 px-3 hover:bg-[var(--accent)] focus:bg-[var(--accent)] flex items-center gap-3 w-full">
+                <div className="p-2 bg-[var(--gold)]/10 text-[var(--gold)] rounded-lg">
+                  <LucideIcons.Printer className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-medium text-[var(--foreground)]">{isId ? 'CV Otomatis (A4)' : 'Generated CV (A4)'}</span>
+                  <span className="text-[10px] text-[var(--muted-foreground)]">{isId ? 'Dibuat dari profil website' : 'Generated from profile data'}</span>
+                </div>
+              </DropdownMenuItem>
+            </Link>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </motion.div>
     </motion.div>
   )
 }
