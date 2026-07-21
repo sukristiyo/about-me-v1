@@ -198,29 +198,28 @@ export default function Sidebar({ settings, socialLinks, mobile = false }: Sideb
             <LucideIcons.Download className="w-5 h-5" />
             <span>{isId ? 'Unduh CV' : 'Download CV'}</span>
             <LucideIcons.ChevronDown className="w-4 h-4 ml-1 opacity-70" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-[calc(100%-48px)] max-w-[200px] rounded-xl border-[var(--border)] bg-[var(--card)] p-1.5 shadow-xl" sideOffset={8}>
+          <DropdownMenuContent align="center" className="w-(--anchor-width) rounded-xl border-[var(--border)] bg-[var(--card)] p-1.5 shadow-xl" sideOffset={8}>
             {settings?.cvUrl && (
               <a href={settings.cvUrl} target="_blank" rel="noopener noreferrer" className="outline-none block mb-1 last:mb-0">
-                <DropdownMenuItem className="rounded-lg cursor-pointer py-2 px-2.5 hover:bg-[var(--accent)] focus:bg-[var(--accent)] flex items-center gap-2.5 w-full">
+                <DropdownMenuItem className="rounded-lg cursor-pointer py-2 px-2 hover:bg-[var(--accent)] focus:bg-[var(--accent)] flex items-center gap-3 w-full">
                   <div className="p-1.5 bg-[var(--gold)]/10 text-[var(--gold)] rounded-md shrink-0">
                     <LucideIcons.FileUp className="w-4 h-4" />
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="font-medium text-[var(--foreground)] text-sm leading-tight">{isId ? 'File CV Asli' : 'Original CV'}</span>
-                    <span className="text-[9px] text-[var(--muted-foreground)] leading-tight mt-0.5">{isId ? 'Upload manual' : 'Manual upload'}</span>
+                    <span className="font-medium text-[var(--foreground)] text-sm leading-none">{isId ? 'File CV Asli' : 'Original CV'}</span>
+                    <span className="text-[10px] text-[var(--muted-foreground)] leading-none mt-1">{isId ? 'Upload manual' : 'Manual upload'}</span>
                   </div>
                 </DropdownMenuItem>
               </a>
             )}
             <Link href={`/${locale}/cv-print`} target="_blank" className="outline-none block mb-1 last:mb-0">
-              <DropdownMenuItem className="rounded-lg cursor-pointer py-2 px-2.5 hover:bg-[var(--accent)] focus:bg-[var(--accent)] flex items-center gap-2.5 w-full">
+              <DropdownMenuItem className="rounded-lg cursor-pointer py-2 px-2 hover:bg-[var(--accent)] focus:bg-[var(--accent)] flex items-center gap-3 w-full">
                 <div className="p-1.5 bg-[var(--gold)]/10 text-[var(--gold)] rounded-md shrink-0">
                   <LucideIcons.Printer className="w-4 h-4" />
                 </div>
                 <div className="flex flex-col text-left">
-                  <span className="font-medium text-[var(--foreground)] text-sm leading-tight">{isId ? 'CV Otomatis' : 'Generated CV'}</span>
-                  <span className="text-[9px] text-[var(--muted-foreground)] leading-tight mt-0.5">{isId ? 'Dari profil website' : 'From profile data'}</span>
+                  <span className="font-medium text-[var(--foreground)] text-sm leading-none">{isId ? 'CV Otomatis' : 'Generated CV'}</span>
+                  <span className="text-[10px] text-[var(--muted-foreground)] leading-none mt-1">{isId ? 'Dari profil website' : 'From profile data'}</span>
                 </div>
               </DropdownMenuItem>
             </Link>
