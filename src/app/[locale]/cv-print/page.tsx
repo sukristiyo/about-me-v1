@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 async function getResumeData() {
   try {
-    const [settings, education, experience, technologies] = await Promise.all([
+    const [settings, education, experience, technologies, portfolio] = await Promise.all([
       prisma.siteSettings.findFirst(),
       prisma.resumeEducation.findMany({
         orderBy: { order: 'asc' },
@@ -23,10 +23,13 @@ async function getResumeData() {
       prisma.technology.findMany({
         orderBy: { order: 'asc' },
       }),
+      prisma.portfolioProject.findMany({
+        orderBy: { order: 'asc' },
+      }),
     ])
-    return { settings, education, experience, technologies }
+    return { settings, education, experience, technologies, portfolio }
   } catch {
-    return { settings: null, education: [], experience: [], technologies: [] }
+    return { settings: null, education: [], experience: [], technologies: [], portfolio: [] }
   }
 }
 
@@ -35,7 +38,7 @@ export default async function CVPrintPage({
 }: {
   params: { locale: string }
 }) {
-  const { settings, education, experience, technologies } = await getResumeData()
+  const { settings, education, experience, technologies, portfolio } = await getResumeData()
 
   return (
     <CVPrintClient 
@@ -43,6 +46,7 @@ export default async function CVPrintPage({
       education={education} 
       experience={experience} 
       technologies={technologies}
+      portfolio={portfolio}
       locale={locale}
     />
   )

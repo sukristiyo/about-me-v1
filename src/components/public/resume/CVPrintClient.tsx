@@ -1,17 +1,18 @@
 'use client'
 
 import { useEffect } from 'react'
-import type { SiteSettings, ResumeEducation, ResumeExperience, Technology } from '@prisma/client'
+import type { SiteSettings, ResumeEducation, ResumeExperience, Technology, PortfolioProject } from '@prisma/client'
 
 interface CVPrintProps {
   settings: SiteSettings | null
   education: ResumeEducation[]
   experience: ResumeExperience[]
   technologies: Technology[]
+  portfolio: PortfolioProject[]
   locale: string
 }
 
-export default function CVPrintClient({ settings, education, experience, technologies, locale }: CVPrintProps) {
+export default function CVPrintClient({ settings, education, experience, technologies, portfolio, locale }: CVPrintProps) {
   useEffect(() => {
     // Automatically trigger print dialog when component mounts
     // Add a small delay to ensure fonts and styles are loaded
@@ -107,6 +108,38 @@ export default function CVPrintClient({ settings, education, experience, technol
           </section>
         )}
 
+        {/* Portfolio */}
+        {portfolio.length > 0 && (
+          <section className="mb-8">
+            <h3 className="text-lg font-bold font-outfit text-gray-900 border-b border-gray-300 pb-1 mb-4 uppercase tracking-wider">{isId ? 'Proyek Portofolio' : 'Portfolio Projects'}</h3>
+            <div className="space-y-5">
+              {portfolio.map((proj) => {
+                const desc = isId ? proj.descriptionId || proj.descriptionEn : proj.descriptionEn
+                return (
+                  <div key={proj.id} className="avoid-page-break">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <h4 className="text-base font-bold text-gray-900">{proj.title}</h4>
+                      <span className="text-sm font-medium text-gray-600 whitespace-nowrap ml-4">
+                        {proj.year}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-700 font-medium mb-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                      {proj.liveUrl && <span className="flex items-center gap-1">🌐 {proj.liveUrl.replace(/^https?:\/\//, '')}</span>}
+                      {proj.repoUrl && <span className="flex items-center gap-1">💻 {proj.repoUrl.replace(/^https?:\/\//, '')}</span>}
+                    </div>
+                    {desc && <p className="text-sm text-gray-700 leading-relaxed mb-2 whitespace-pre-wrap">{desc}</p>}
+                    {proj.techStack.length > 0 && (
+                      <div className="text-xs text-gray-600">
+                        <span className="font-semibold text-gray-800">{isId ? 'Teknologi:' : 'Tech Stack:'}</span> {proj.techStack.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
         {/* Skills */}
         {technologies.length > 0 && (
           <section className="mb-8">
@@ -133,6 +166,10 @@ export default function CVPrintClient({ settings, education, experience, technol
           @page {
             margin: 15mm;
             size: A4 portrait;
+          }
+          .avoid-page-break {
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
         }
       `}</style>
