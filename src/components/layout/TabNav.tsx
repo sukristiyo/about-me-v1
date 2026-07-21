@@ -31,7 +31,7 @@ export default function TabNav() {
           const isActive = pathname === href || pathname.startsWith(`${href}/`)
 
           return (
-            <li key={href} className="flex-1">
+            <li key={href} className="flex-1 sm:flex-initial">
               <Link
                 href={href as any}
                 aria-label={t(key as any)}
