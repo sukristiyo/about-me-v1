@@ -198,6 +198,7 @@ export default function Sidebar({ settings, socialLinks, mobile = false }: Sideb
             <LucideIcons.Download className="w-5 h-5" />
             <span>{isId ? 'Unduh CV' : 'Download CV'}</span>
             <LucideIcons.ChevronDown className="w-4 h-4 ml-1 opacity-70" />
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="center" className="w-(--anchor-width) rounded-xl border-[var(--border)] bg-[var(--card)] p-1.5 shadow-xl" sideOffset={8}>
             {settings?.cvUrl && (
               <a href={settings.cvUrl} target="_blank" rel="noopener noreferrer" className="outline-none block mb-1 last:mb-0">
