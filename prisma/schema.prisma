@@ -206,3 +206,24 @@ model ShortLink {
   @@index([isActive])
 }
 
+model LynkProfile {
+  id                 String   @id @default(cuid())
+  displayName        String?
+  tagline            String?
+  bio                String?  @db.Text
+  avatarUrl          String?
+  location           String?
+  verifiedBadge      Boolean  @default(true)
+  showMainPortfolio  Boolean  @default(true)
+  mainPortfolioLabel String?  @default("Main Portfolio")
+  mainPortfolioUrl   String?  @default("/en")
+  showDownloadCv     Boolean  @default(true)
+  downloadCvLabel    String?  @default("Download CV")
+  downloadCvUrl      String?
+  customCtaLabel     String?
+  customCtaUrl       String?
+  theme              String   @default("default")
+  updatedAt          DateTime @updatedAt
+  createdAt          DateTime @default(now())
+}
+

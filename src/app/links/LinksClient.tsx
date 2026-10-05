@@ -33,10 +33,11 @@ import {
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { trackEvent } from '@/lib/analytics'
 import { toast } from 'sonner'
-import type { SiteSettings, ShortLink, SocialLink } from '@prisma/client'
+import type { SiteSettings, ShortLink, SocialLink, LynkProfile } from '@prisma/client'
 
 interface LinksClientProps {
   settings: SiteSettings | null
+  lynkProfile: LynkProfile | null
   links: ShortLink[]
   socialLinks: SocialLink[]
 }
@@ -54,13 +55,26 @@ const iconMap: Record<string, any> = {
   Sparkles,
 }
 
-export function LinksClient({ settings, links, socialLinks }: LinksClientProps) {
+export function LinksClient({ settings, lynkProfile, links, socialLinks }: LinksClientProps) {
   const [copied, setCopied] = useState(false)
 
-  const name = settings?.nameEn || 'Sukristiyo'
-  const subtitle = settings?.subtitleEn || 'DevOps · SRE · Cloud Infrastructure Specialist'
-  const location = settings?.location || 'Jakarta, Indonesia'
-  const profilePhoto = settings?.profilePhotoUrl || '/images/my-avatar.png'
+  // Dynamic profile fields with graceful fallbacks
+  const name = lynkProfile?.displayName || settings?.nameEn || 'Sukristiyo'
+  const subtitle = lynkProfile?.tagline || settings?.subtitleEn || 'DevOps · SRE · Cloud Infrastructure Specialist'
+  const location = lynkProfile?.location || settings?.location || 'Jakarta, Indonesia'
+  const profilePhoto = lynkProfile?.avatarUrl || settings?.profilePhotoUrl || '/images/my-avatar.png'
+  const showVerified = lynkProfile ? lynkProfile.verifiedBadge : true
+
+  const showPortfolio = lynkProfile ? lynkProfile.showMainPortfolio : true
+  const portfolioLabel = lynkProfile?.mainPortfolioLabel || 'Main Portfolio'
+  const portfolioUrl = lynkProfile?.mainPortfolioUrl || '/en'
+
+  const showCv = lynkProfile ? lynkProfile.showDownloadCv : true
+  const cvLabel = lynkProfile?.downloadCvLabel || 'Download CV'
+  const cvUrl = lynkProfile?.downloadCvUrl || settings?.cvUrl || null
+
+  const customCtaLabel = lynkProfile?.customCtaLabel
+  const customCtaUrl = lynkProfile?.customCtaUrl
 
   const handleShare = async () => {
     const url = typeof window !== 'undefined' ? window.location.href : 'https://link.sukristiyo.site'
@@ -144,7 +158,9 @@ export function LinksClient({ settings, links, socialLinks }: LinksClientProps) 
           <div className="space-y-1">
             <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center justify-center gap-1.5">
               <span>{name}</span>
-              <BadgeCheck className="h-5 w-5 text-blue-500 shrink-0" fill="currentColor" />
+              {showVerified && (
+                <BadgeCheck className="h-5 w-5 text-blue-500 shrink-0" fill="currentColor" />
+              )}
             </h1>
             <p className="text-xs sm:text-sm font-medium text-muted-foreground max-w-sm mx-auto leading-relaxed">
               {subtitle}
@@ -152,10 +168,12 @@ export function LinksClient({ settings, links, socialLinks }: LinksClientProps) 
           </div>
 
           {/* Location Pill */}
-          <div className="inline-flex items-center gap-1 text-[11px] font-mono text-muted-foreground/80 bg-muted/30 px-3 py-1 rounded-full border border-border/50">
-            <MapPin className="h-3 w-3 text-primary" />
-            <span>{location}</span>
-          </div>
+          {location && (
+            <div className="inline-flex items-center gap-1 text-[11px] font-mono text-muted-foreground/80 bg-muted/30 px-3 py-1 rounded-full border border-border/50">
+              <MapPin className="h-3 w-3 text-primary" />
+              <span>{location}</span>
+            </div>
+          )}
 
           {/* Social Icons Row */}
           <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
@@ -216,36 +234,58 @@ export function LinksClient({ settings, links, socialLinks }: LinksClientProps) 
         </motion.div>
 
         {/* ── Official Profile Anchors (Portfolio & CV) ── */}
-        <div className="grid grid-cols-2 gap-2.5 pt-2">
-          <Link
-            href="/en"
-            className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-card border border-border/80 hover:border-primary/50 hover:bg-muted/30 transition-all text-xs font-semibold text-foreground shadow-sm group"
-          >
-            <Globe className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
-            <span>Main Portfolio</span>
-          </Link>
+        {(showPortfolio || showCv) && (
+          <div className={`grid ${showPortfolio && showCv ? 'grid-cols-2' : 'grid-cols-1'} gap-2.5 pt-2`}>
+            {showPortfolio && (
+              <Link
+                href={portfolioUrl}
+                className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-card border border-border/80 hover:border-primary/50 hover:bg-muted/30 transition-all text-xs font-semibold text-foreground shadow-sm group"
+              >
+                <Globe className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+                <span>{portfolioLabel}</span>
+              </Link>
+            )}
 
-          {settings?.cvUrl ? (
-            <a
-              href={settings.cvUrl}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => trackEvent('cv_download', { type: 'lynk_profile' })}
-              className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-card border border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/10 transition-all text-xs font-semibold text-amber-500 shadow-sm group"
-            >
-              <FileText className="h-4 w-4 group-hover:scale-110 transition-transform" />
-              <span>Download CV</span>
-            </a>
-          ) : (
-            <Link
-              href="/en/resume"
-              className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-card border border-border/80 hover:border-primary/50 hover:bg-muted/30 transition-all text-xs font-semibold text-foreground shadow-sm group"
-            >
-              <FileText className="h-4 w-4 text-primary" />
-              <span>View Resume</span>
-            </Link>
-          )}
-        </div>
+            {showCv && (
+              cvUrl ? (
+                <a
+                  href={cvUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => trackEvent('cv_download', { type: 'lynk_profile' })}
+                  className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-card border border-amber-500/30 hover:border-amber-500/60 hover:bg-amber-500/10 transition-all text-xs font-semibold text-amber-500 shadow-sm group"
+                >
+                  <FileText className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                  <span>{cvLabel}</span>
+                </a>
+              ) : (
+                <Link
+                  href="/en/resume"
+                  className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-card border border-border/80 hover:border-primary/50 hover:bg-muted/30 transition-all text-xs font-semibold text-foreground shadow-sm group"
+                >
+                  <FileText className="h-4 w-4 text-primary" />
+                  <span>{cvLabel}</span>
+                </Link>
+              )
+            )}
+          </div>
+        )}
+
+        {/* ── Custom Dynamic CTA Button (If Set) ── */}
+        {customCtaLabel && customCtaUrl && (
+          <a
+            href={customCtaUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/40 hover:border-primary text-xs font-bold text-primary shadow-sm transition-all group"
+          >
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="h-4 w-4 text-primary animate-bounce" />
+              <span>{customCtaLabel}</span>
+            </div>
+            <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </a>
+        )}
 
         {/* ── Curated Affiliate & Resource Link Cards ── */}
         <div className="space-y-4 pt-1">

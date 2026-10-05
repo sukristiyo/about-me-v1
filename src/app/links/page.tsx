@@ -2,22 +2,32 @@ import { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { LinksClient } from './LinksClient'
 
-export const revalidate = 60 // Revalidate every 60 seconds
+export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Sukristiyo | Links & Curated Resources',
-  description:
-    'Curated DevOps tools, cloud credits, infrastructure promotions, and official links by Sukristiyo.',
-  openGraph: {
-    title: 'Sukristiyo | Links & Curated Resources',
-    description: 'DevOps, SRE & Cloud Engineer. Curated resources, tools, and official links.',
-    url: 'https://link.sukristiyo.site',
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const [settings, lynkProfile] = await Promise.all([
+    prisma.siteSettings.findFirst(),
+    prisma.lynkProfile.findFirst(),
+  ])
+
+  const name = lynkProfile?.displayName || settings?.nameEn || 'Sukristiyo'
+  const tagline = lynkProfile?.tagline || settings?.subtitleEn || 'DevOps · SRE · Cloud Engineer'
+
+  return {
+    title: `${name} | Links & Curated Resources`,
+    description: tagline,
+    openGraph: {
+      title: `${name} | Links & Curated Resources`,
+      description: tagline,
+      url: 'https://link.sukristiyo.site',
+    },
+  }
 }
 
 export default async function LinksPage() {
-  const [settings, links, socialLinks] = await Promise.all([
+  const [settings, lynkProfile, links, socialLinks] = await Promise.all([
     prisma.siteSettings.findFirst(),
+    prisma.lynkProfile.findFirst(),
     prisma.shortLink.findMany({
       where: { isActive: true },
       orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
@@ -31,6 +41,7 @@ export default async function LinksPage() {
   return (
     <LinksClient
       settings={settings}
+      lynkProfile={lynkProfile}
       links={links}
       socialLinks={socialLinks}
     />

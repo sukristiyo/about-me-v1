@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,9 @@ import {
   Layers,
   Shield,
   Zap,
+  UserCheck,
+  Save,
+  BadgeCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -55,6 +59,24 @@ interface ShortLink {
   isActive: boolean
   createdAt: string
   updatedAt: string
+}
+
+interface LynkProfileData {
+  id?: string
+  displayName: string
+  tagline: string
+  bio: string
+  avatarUrl: string
+  location: string
+  verifiedBadge: boolean
+  showMainPortfolio: boolean
+  mainPortfolioLabel: string
+  mainPortfolioUrl: string
+  showDownloadCv: boolean
+  downloadCvLabel: string
+  downloadCvUrl: string
+  customCtaLabel: string
+  customCtaUrl: string
 }
 
 const availableIcons = [
@@ -78,12 +100,32 @@ export default function ShortLinksPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [urlFormat, setUrlFormat] = useState<'subdomain' | 'path'>('subdomain')
 
-  // Dialog state
+  // LynkProfile state
+  const [profileLoading, setProfileLoading] = useState(true)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [profile, setProfile] = useState<LynkProfileData>({
+    displayName: '',
+    tagline: '',
+    bio: '',
+    avatarUrl: '',
+    location: '',
+    verifiedBadge: true,
+    showMainPortfolio: true,
+    mainPortfolioLabel: 'Main Portfolio',
+    mainPortfolioUrl: '/en',
+    showDownloadCv: true,
+    downloadCvLabel: 'Download CV',
+    downloadCvUrl: '',
+    customCtaLabel: '',
+    customCtaUrl: '',
+  })
+
+  // Dialog state for short links
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingLink, setEditingLink] = useState<ShortLink | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // Form fields
+  // Form fields for short link
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [targetUrl, setTargetUrl] = useState('')
@@ -111,9 +153,64 @@ export default function ShortLinksPage() {
     }
   }
 
+  const fetchProfile = async () => {
+    setProfileLoading(true)
+    try {
+      const res = await fetch('/api/admin/lynk-profile')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.profile) {
+          setProfile({
+            id: data.profile.id,
+            displayName: data.profile.displayName || '',
+            tagline: data.profile.tagline || '',
+            bio: data.profile.bio || '',
+            avatarUrl: data.profile.avatarUrl || '',
+            location: data.profile.location || '',
+            verifiedBadge: data.profile.verifiedBadge ?? true,
+            showMainPortfolio: data.profile.showMainPortfolio ?? true,
+            mainPortfolioLabel: data.profile.mainPortfolioLabel || 'Main Portfolio',
+            mainPortfolioUrl: data.profile.mainPortfolioUrl || '/en',
+            showDownloadCv: data.profile.showDownloadCv ?? true,
+            downloadCvLabel: data.profile.downloadCvLabel || 'Download CV',
+            downloadCvUrl: data.profile.downloadCvUrl || '',
+            customCtaLabel: data.profile.customCtaLabel || '',
+            customCtaUrl: data.profile.customCtaUrl || '',
+          })
+        }
+      }
+    } catch {
+      toast.error('Failed to load Lynk.id profile')
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchLinks()
+    fetchProfile()
   }, [])
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingProfile(true)
+    try {
+      const res = await fetch('/api/admin/lynk-profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile),
+      })
+      if (res.ok) {
+        toast.success('Lynk.id profile updated successfully!')
+      } else {
+        toast.error('Failed to update Lynk.id profile')
+      }
+    } catch {
+      toast.error('Network error saving profile')
+    } finally {
+      setSavingProfile(false)
+    }
+  }
 
   const handleOpenCreate = () => {
     setEditingLink(null)
@@ -299,10 +396,13 @@ export default function ShortLinksPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={fetchLinks}
-            disabled={loading}
+            onClick={() => {
+              fetchLinks()
+              fetchProfile()
+            }}
+            disabled={loading || profileLoading}
             className="h-9 w-9 text-muted-foreground hover:text-foreground"
-            title="Refresh links"
+            title="Refresh"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
@@ -314,284 +414,489 @@ export default function ShortLinksPage() {
         </div>
       </div>
 
-      {/* ── Metric Cards ── */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card border-border backdrop-blur-xl">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Total Links
-            </CardTitle>
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
-              <Link2 className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-card-foreground">
-              {loading ? '—' : links.length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">{activeCount} shown on profile</p>
-          </CardContent>
-        </Card>
+      {/* ── Main Tab Navigation ── */}
+      <Tabs defaultValue="links" className="space-y-6">
+        <TabsList className="bg-muted/40 p-1 border border-border rounded-xl">
+          <TabsTrigger value="links" className="gap-2 text-xs sm:text-sm">
+            <Link2 className="h-4 w-4" />
+            Curated Links & Shortener ({links.length})
+          </TabsTrigger>
+          <TabsTrigger value="customizer" className="gap-2 text-xs sm:text-sm">
+            <UserCheck className="h-4 w-4" />
+            Lynk.id Profile Customizer
+          </TabsTrigger>
+        </TabsList>
 
-        <Card className="bg-card border-border backdrop-blur-xl">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Total Clicks
-            </CardTitle>
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
-              <MousePointerClick className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-card-foreground">
-              {loading ? '—' : totalClicks.toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <TrendingUp className="h-3 w-3 text-emerald-500" />
-              <span>Redirects & taps</span>
-            </p>
-          </CardContent>
-        </Card>
+        {/* ═════════ TAB 1: LINKS & SHORTENER ═════════ */}
+        <TabsContent value="links" className="space-y-6">
+          {/* Metric Cards */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-card border-border backdrop-blur-xl">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Total Links
+                </CardTitle>
+                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+                  <Link2 className="h-4 w-4" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-card-foreground">
+                  {loading ? '—' : links.length}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{activeCount} shown on profile</p>
+              </CardContent>
+            </Card>
 
-        <Card className="bg-card border-border backdrop-blur-xl">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Top Performer
-            </CardTitle>
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
-              <Sparkles className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-base font-bold text-card-foreground truncate max-w-[200px]">
-              {topLink ? `/${topLink.slug}` : '—'}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {topLink ? `${topLink.clicks.toLocaleString()} clicks` : 'No clicks yet'}
-            </p>
-          </CardContent>
-        </Card>
+            <Card className="bg-card border-border backdrop-blur-xl">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Total Clicks
+                </CardTitle>
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500">
+                  <MousePointerClick className="h-4 w-4" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-card-foreground">
+                  {loading ? '—' : totalClicks.toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3 text-emerald-500" />
+                  <span>Redirects & taps</span>
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card className="bg-card border-border backdrop-blur-xl">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Active Hub Status
-            </CardTitle>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
-              <Globe2 className="h-4 w-4" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-emerald-500">
-              {links.length > 0 ? `${Math.round((activeCount / links.length) * 100)}%` : '100%'}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Live routing enabled</p>
-          </CardContent>
-        </Card>
-      </div>
+            <Card className="bg-card border-border backdrop-blur-xl">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Top Performer
+                </CardTitle>
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-base font-bold text-card-foreground truncate max-w-[200px]">
+                  {topLink ? `/${topLink.slug}` : '—'}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {topLink ? `${topLink.clicks.toLocaleString()} clicks` : 'No clicks yet'}
+                </p>
+              </CardContent>
+            </Card>
 
-      {/* ── Copy Format Selector Bar ── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 rounded-xl border border-border bg-card/80 backdrop-blur-md gap-3">
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground font-medium">Default Copy URL:</span>
-          <div className="inline-flex rounded-lg border border-border bg-muted/30 p-0.5">
-            <button
-              onClick={() => setUrlFormat('subdomain')}
-              className={`px-2.5 py-1 text-xs rounded-md font-mono transition-all ${
-                urlFormat === 'subdomain'
-                  ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              link.sukristiyo.site/[slug]
-            </button>
-            <button
-              onClick={() => setUrlFormat('path')}
-              className={`px-2.5 py-1 text-xs rounded-md font-mono transition-all ${
-                urlFormat === 'path'
-                  ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              sukristiyo.my.id/go/[slug]
-            </button>
+            <Card className="bg-card border-border backdrop-blur-xl">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Active Hub Status
+                </CardTitle>
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <Globe2 className="h-4 w-4" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-emerald-500">
+                  {links.length > 0 ? `${Math.round((activeCount / links.length) * 100)}%` : '100%'}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Live routing enabled</p>
+              </CardContent>
+            </Card>
           </div>
-        </div>
 
-        <span className="text-[11px] text-muted-foreground font-mono">
-          💡 Tap &quot;Copy&quot; on any link below to copy with your chosen format.
-        </span>
-      </div>
-
-      {/* ── Filters & Search ── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title, slug, or destination..."
-            className="pl-9 bg-card border-border"
-          />
-        </div>
-
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
-                selectedCategory === cat
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-muted/40 text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Links Cards List ── */}
-      {loading ? (
-        <div className="py-16 text-center text-sm text-muted-foreground animate-pulse">
-          Loading links...
-        </div>
-      ) : filteredLinks.length === 0 ? (
-        <Card className="bg-card border-border py-12 text-center">
-          <CardContent className="space-y-3">
-            <div className="h-12 w-12 rounded-2xl bg-muted/50 text-muted-foreground flex items-center justify-center mx-auto">
-              <Link2 className="h-6 w-6" />
+          {/* Copy Format Selector Bar */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3.5 rounded-xl border border-border bg-card/80 backdrop-blur-md gap-3">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-muted-foreground font-medium">Default Copy URL:</span>
+              <div className="inline-flex rounded-lg border border-border bg-muted/30 p-0.5">
+                <button
+                  onClick={() => setUrlFormat('subdomain')}
+                  className={`px-2.5 py-1 text-xs rounded-md font-mono transition-all ${
+                    urlFormat === 'subdomain'
+                      ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  link.sukristiyo.site/[slug]
+                </button>
+                <button
+                  onClick={() => setUrlFormat('path')}
+                  className={`px-2.5 py-1 text-xs rounded-md font-mono transition-all ${
+                    urlFormat === 'path'
+                      ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  sukristiyo.my.id/go/[slug]
+                </button>
+              </div>
             </div>
-            <h3 className="font-semibold text-foreground">No links found</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              {search
-                ? 'No links match your search query.'
-                : 'Create your first link to feature on your Lynk.id style showcase and share everywhere.'}
-            </p>
-            {!search && (
-              <Button onClick={handleOpenCreate} size="sm" className="mt-2">
-                <Plus className="h-3.5 w-3.5 mr-1" /> Add Your First Link
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-3.5">
-          {filteredLinks.map((link) => (
-            <Card
-              key={link.id}
-              className={`bg-card border-border transition-all duration-200 hover:border-primary/40 ${
-                !link.isActive ? 'opacity-60' : ''
-              }`}
-            >
-              <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                {/* Left Info */}
-                <div className="space-y-1.5 min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-foreground text-sm">{link.title}</span>
-                    <Badge variant="secondary" className="text-[10px] py-0 font-normal">
-                      {link.category}
-                    </Badge>
-                    {link.badge && (
-                      <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">
-                        {link.badge}
-                      </span>
-                    )}
-                    {!link.isActive && (
-                      <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">
-                        Hidden
-                      </Badge>
-                    )}
-                  </div>
 
-                  {/* Short Link pill & Copy button */}
-                  <div className="flex items-center gap-2 flex-wrap pt-0.5">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/40 border border-border/80 font-mono text-xs text-primary font-medium">
-                      <span>/{link.slug}</span>
+            <span className="text-[11px] text-muted-foreground font-mono">
+              💡 Tap &quot;Copy&quot; on any link below to copy with your chosen format.
+            </span>
+          </div>
+
+          {/* Filters & Search */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by title, slug, or destination..."
+                className="pl-9 bg-card border-border"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${
+                    selectedCategory === cat
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-muted/40 text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Links Cards List */}
+          {loading ? (
+            <div className="py-16 text-center text-sm text-muted-foreground animate-pulse">
+              Loading links...
+            </div>
+          ) : filteredLinks.length === 0 ? (
+            <Card className="bg-card border-border py-12 text-center">
+              <CardContent className="space-y-3">
+                <div className="h-12 w-12 rounded-2xl bg-muted/50 text-muted-foreground flex items-center justify-center mx-auto">
+                  <Link2 className="h-6 w-6" />
+                </div>
+                <h3 className="font-semibold text-foreground">No links found</h3>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                  {search
+                    ? 'No links match your search query.'
+                    : 'Create your first link to feature on your Lynk.id style showcase and share everywhere.'}
+                </p>
+                {!search && (
+                  <Button onClick={handleOpenCreate} size="sm" className="mt-2">
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Add Your First Link
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-3.5">
+              {filteredLinks.map((link) => (
+                <Card
+                  key={link.id}
+                  className={`bg-card border-border transition-all duration-200 hover:border-primary/40 ${
+                    !link.isActive ? 'opacity-60' : ''
+                  }`}
+                >
+                  <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="space-y-1.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-foreground text-sm">{link.title}</span>
+                        <Badge variant="secondary" className="text-[10px] py-0 font-normal">
+                          {link.category}
+                        </Badge>
+                        {link.badge && (
+                          <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">
+                            {link.badge}
+                          </span>
+                        )}
+                        {!link.isActive && (
+                          <Badge variant="outline" className="text-[10px] text-amber-500 border-amber-500/30">
+                            Hidden
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/40 border border-border/80 font-mono text-xs text-primary font-medium">
+                          <span>/{link.slug}</span>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyLink(link.slug, link.id)}
+                          className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                        >
+                          {copiedId === link.id ? (
+                            <>
+                              <Check className="h-3.5 w-3.5 text-emerald-500" />
+                              <span className="text-emerald-500">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3.5 w-3.5" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </Button>
+
+                        <a
+                          href={`/go/${link.slug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                          title="Test redirect"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+
+                      <div className="text-xs text-muted-foreground truncate max-w-lg font-mono opacity-80 pt-0.5">
+                        ↳ {link.targetUrl}
+                      </div>
+
+                      {link.description && (
+                        <p className="text-xs text-muted-foreground pt-1">{link.description}</p>
+                      )}
                     </div>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyLink(link.slug, link.id)}
-                      className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
-                    >
-                      {copiedId === link.id ? (
-                        <>
-                          <Check className="h-3.5 w-3.5 text-emerald-500" />
-                          <span className="text-emerald-500">Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-3.5 w-3.5" />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex items-center gap-4 self-end sm:self-center shrink-0">
+                      <div className="text-right">
+                        <span className="text-xs text-muted-foreground block">Clicks</span>
+                        <span className="text-base font-bold font-mono text-foreground">
+                          {link.clicks.toLocaleString()}
+                        </span>
+                      </div>
 
-                    <a
-                      href={`/go/${link.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                      title="Test redirect"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </a>
-                  </div>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={link.isActive}
+                          onCheckedChange={() => handleToggleStatus(link)}
+                          title={link.isActive ? 'Active on Lynk.id' : 'Hidden'}
+                        />
+                      </div>
 
-                  {/* Destination preview */}
-                  <div className="text-xs text-muted-foreground truncate max-w-lg font-mono opacity-80 pt-0.5">
-                    ↳ {link.targetUrl}
-                  </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleOpenEdit(link)}
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(link.id, link.slug)}
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
-                  {link.description && (
-                    <p className="text-xs text-muted-foreground pt-1">{link.description}</p>
-                  )}
-                </div>
-
-                {/* Right Actions & Clicks */}
-                <div className="flex items-center gap-4 self-end sm:self-center shrink-0">
-                  <div className="text-right">
-                    <span className="text-xs text-muted-foreground block">Clicks</span>
-                    <span className="text-base font-bold font-mono text-foreground">
-                      {link.clicks.toLocaleString()}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={link.isActive}
-                      onCheckedChange={() => handleToggleStatus(link)}
-                      title={link.isActive ? 'Active on Lynk.id' : 'Hidden'}
+        {/* ═════════ TAB 2: LYNK.ID PROFILE CUSTOMIZER ═════════ */}
+        <TabsContent value="customizer">
+          <form onSubmit={handleSaveProfile} className="space-y-6">
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-primary" />
+                  Header & Bio Personalization
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Customize how your profile appears at link.sukristiyo.site independently from your main portfolio.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-foreground">Display Name</label>
+                    <Input
+                      value={profile.displayName}
+                      onChange={(e) => setProfile({ ...profile, displayName: e.target.value })}
+                      placeholder="e.g. Sukristiyo"
                     />
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleOpenEdit(link)}
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    >
-                      <Edit className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(link.id, link.slug)}
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-foreground">Location</label>
+                    <Input
+                      value={profile.location}
+                      onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                      placeholder="e.g. Jakarta, Indonesia"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">Tagline / Subtitle</label>
+                  <Input
+                    value={profile.tagline}
+                    onChange={(e) => setProfile({ ...profile, tagline: e.target.value })}
+                    placeholder="e.g. Cloud Engineer | DevOps | SRE | Data Center"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground">Custom Avatar URL (Optional)</label>
+                  <Input
+                    value={profile.avatarUrl}
+                    onChange={(e) => setProfile({ ...profile, avatarUrl: e.target.value })}
+                    placeholder="Leave empty to use main portfolio avatar"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-muted/20">
+                  <div className="flex items-center gap-2">
+                    <BadgeCheck className="h-4 w-4 text-blue-500" />
+                    <span className="text-xs font-medium text-foreground">Verified Blue Checkmark</span>
+                  </div>
+                  <Switch
+                    checked={profile.verifiedBadge}
+                    onCheckedChange={(val) => setProfile({ ...profile, verifiedBadge: val })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons Configuration */}
+            <Card className="bg-card border-border">
+              <CardHeader>
+                <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-amber-500" />
+                  Primary Action Buttons
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Toggle or rename the top CTA buttons displayed above your link list.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                {/* Main Portfolio Button */}
+                <div className="p-3.5 rounded-xl border border-border space-y-3 bg-muted/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-semibold text-foreground">Main Portfolio Button</span>
+                    </div>
+                    <Switch
+                      checked={profile.showMainPortfolio}
+                      onCheckedChange={(val) => setProfile({ ...profile, showMainPortfolio: val })}
+                    />
+                  </div>
+
+                  {profile.showMainPortfolio && (
+                    <div className="grid sm:grid-cols-2 gap-3 pt-1">
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-muted-foreground">Button Label</label>
+                        <Input
+                          value={profile.mainPortfolioLabel}
+                          onChange={(e) => setProfile({ ...profile, mainPortfolioLabel: e.target.value })}
+                          placeholder="Main Portfolio"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-muted-foreground">Destination URL</label>
+                        <Input
+                          value={profile.mainPortfolioUrl}
+                          onChange={(e) => setProfile({ ...profile, mainPortfolioUrl: e.target.value })}
+                          placeholder="/en"
+                          className="h-8 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Download CV Button */}
+                <div className="p-3.5 rounded-xl border border-border space-y-3 bg-muted/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-amber-500" />
+                      <span className="text-xs font-semibold text-foreground">Download CV Button</span>
+                    </div>
+                    <Switch
+                      checked={profile.showDownloadCv}
+                      onCheckedChange={(val) => setProfile({ ...profile, showDownloadCv: val })}
+                    />
+                  </div>
+
+                  {profile.showDownloadCv && (
+                    <div className="grid sm:grid-cols-2 gap-3 pt-1">
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-muted-foreground">Button Label</label>
+                        <Input
+                          value={profile.downloadCvLabel}
+                          onChange={(e) => setProfile({ ...profile, downloadCvLabel: e.target.value })}
+                          placeholder="Download CV"
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-muted-foreground">Custom CV Download URL (Optional)</label>
+                        <Input
+                          value={profile.downloadCvUrl}
+                          onChange={(e) => setProfile({ ...profile, downloadCvUrl: e.target.value })}
+                          placeholder="Leave empty to use main CV URL"
+                          className="h-8 text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Extra Custom CTA Banner */}
+                <div className="p-3.5 rounded-xl border border-primary/30 space-y-3 bg-primary/5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-semibold text-foreground">
+                      Extra Highlight CTA Banner (Optional)
+                    </span>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-muted-foreground">Highlight Banner Text</label>
+                      <Input
+                        value={profile.customCtaLabel}
+                        onChange={(e) => setProfile({ ...profile, customCtaLabel: e.target.value })}
+                        placeholder="e.g. 🚀 Book a 1:1 Cloud Architecture Consultation"
+                        className="h-8 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[11px] text-muted-foreground">Destination Link</label>
+                      <Input
+                        value={profile.customCtaUrl}
+                        onChange={(e) => setProfile({ ...profile, customCtaUrl: e.target.value })}
+                        placeholder="https://cal.com/sukristiyo or WhatsApp link"
+                        className="h-8 text-xs font-mono"
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+
+            <div className="flex justify-end gap-3">
+              <Button type="submit" disabled={savingProfile} className="gap-2">
+                <Save className="h-4 w-4" />
+                {savingProfile ? 'Saving...' : 'Save Lynk.id Profile Changes'}
+              </Button>
+            </div>
+          </form>
+        </TabsContent>
+      </Tabs>
 
       {/* ── Create / Edit Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
