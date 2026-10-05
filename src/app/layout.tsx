@@ -31,6 +31,7 @@ const BASE_URL = 'https://sukristiyo.my.id'
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
 import NextTopLoader from 'nextjs-toploader'
+import { AnalyticsTracker } from '@/components/analytics/AnalyticsTracker'
 
 import { ThemeProvider } from '@/components/layout/ThemeProvider'
 
@@ -65,6 +66,7 @@ export default async function RootLayout({
           enableSystem
         >
           <NextTopLoader color="var(--gold)" showSpinner={false} />
+          <AnalyticsTracker />
           {children}
           <Analytics />
           <SpeedInsights />

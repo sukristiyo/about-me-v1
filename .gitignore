@@ -41,3 +41,13 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+seed.js
+query.js
+temp_*.txt
+*.log
+
+.kilo
+.agents
+skill-lock.json
+skills-lock.json

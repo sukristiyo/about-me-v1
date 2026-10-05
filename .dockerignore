@@ -37,3 +37,7 @@ postcss.config.mjs
 components.json
 docs/
 scratch/
+.kilo
+.agents
+skill-lock.json
+skills-lock.json

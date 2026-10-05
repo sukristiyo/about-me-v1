@@ -14,7 +14,9 @@ export async function POST(request: Request) {
 
     const formData = await request.formData()
     const file = formData.get('file')
-    const folder = (formData.get('folder') as string | null) ?? 'uploads'
+    const rawFolder = (formData.get('folder') as string | null) ?? 'uploads'
+    // Prevent path traversal: allow only alphanumeric, hyphen, and underscore
+    const safeFolder = rawFolder.replace(/[^a-zA-Z0-9_-]/g, '') || 'uploads'
 
     if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -25,7 +27,7 @@ export async function POST(request: Request) {
 
     if (!ALLOWED_TYPES.includes(uploadedFile.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only jpg, png, webp, gif, and pdf are allowed. Found: ' + uploadedFile.type },
+        { error: 'Invalid file type. Only jpg, png, webp, gif, and pdf are allowed.' },
         { status: 400 }
       )
     }
@@ -37,7 +39,13 @@ export async function POST(request: Request) {
       )
     }
 
-    const blob = await put(`${folder}/${uploadedFile.name}`, uploadedFile, {
+    // Sanitize file name to prevent directory traversal or control characters
+    const safeName = (uploadedFile.name || 'file')
+      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .substring(0, 80)
+    const uniquePath = `${safeFolder}/${Date.now()}-${safeName}`
+
+    const blob = await put(uniquePath, uploadedFile, {
       access: 'public',
     })
 

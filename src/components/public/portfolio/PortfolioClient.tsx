@@ -118,7 +118,7 @@ export default function PortfolioClient({ projects }: PortfolioClientProps) {
                   src={project.thumbnailUrl}
                   alt={project.title}
                   fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   priority={index < 2}
                 />
@@ -131,14 +131,14 @@ export default function PortfolioClient({ projects }: PortfolioClientProps) {
               )}
 
               {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-white/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm">
-                <div className="w-10 h-10 rounded-full bg-[var(--gold)] text-white flex items-center justify-center mb-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-6 text-center backdrop-blur-sm z-20">
+                <div className="w-10 h-10 rounded-full bg-[var(--gold)] text-white flex items-center justify-center mb-3 transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300">
                   <Eye className="w-5 h-5" />
                 </div>
-                <h3 className="font-outfit text-lg font-bold text-[var(--foreground)] mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-75">
+                <h3 className="font-outfit text-base font-bold text-white mb-1.5 transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300 delay-75">
                   {project.title}
                 </h3>
-                <p className="text-[var(--gold)] text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 delay-100">
+                <p className="text-[var(--gold)] text-xs uppercase tracking-wider transform translate-y-3 group-hover:translate-y-0 transition-transform duration-300 delay-100">
                   {CATEGORIES.find(c => c.id === project.category)?.[locale === 'id' ? 'labelId' : 'labelEn'] || project.category}
                 </p>
               </div>

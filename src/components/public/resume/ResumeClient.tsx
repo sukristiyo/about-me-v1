@@ -37,7 +37,7 @@ export default function ResumeClient({ education, experience }: ResumeClientProp
       {/* ── Education Timeline ── */}
       <section className="relative">
         <div className="flex items-center gap-6 mb-8 relative z-10">
-          <div className="w-12 h-12 rounded-xl bg-[#1e1e20] border border-[var(--border)] flex items-center justify-center shrink-0 shadow-md">
+          <div className="w-12 h-12 rounded-xl bg-[var(--icon-bg)] border border-[var(--border)] flex items-center justify-center shrink-0 shadow-sm">
             <GraduationCap className="w-5 h-5 text-[var(--gold)]" />
           </div>
           <h2 className="font-outfit text-2xl font-bold text-[var(--foreground)]">{t('education')}</h2>
@@ -54,7 +54,7 @@ export default function ResumeClient({ education, experience }: ResumeClientProp
               className="relative pl-14"
             >
               {/* Timeline Dot */}
-              <div className="absolute left-[18px] top-1.5 w-3 h-3 rounded-full bg-[var(--gold)] border-2 border-[#1e1e20] shadow-[0_0_0_4px_var(--background),0_0_15px_var(--gold)]" />
+              <div className="absolute left-[18px] top-1.5 w-3 h-3 rounded-full bg-[var(--gold)] border-2 border-[var(--background)] timeline-dot" />
               
               {/* Content */}
               <div className="space-y-2">
@@ -81,7 +81,7 @@ export default function ResumeClient({ education, experience }: ResumeClientProp
       {/* ── Experience Timeline ── */}
       <section className="relative">
         <div className="flex items-center gap-6 mb-8 relative z-10">
-          <div className="w-12 h-12 rounded-xl bg-[#1e1e20] border border-[var(--border)] flex items-center justify-center shrink-0 shadow-md">
+          <div className="w-12 h-12 rounded-xl bg-[var(--icon-bg)] border border-[var(--border)] flex items-center justify-center shrink-0 shadow-sm">
             <Briefcase className="w-5 h-5 text-[var(--gold)]" />
           </div>
           <h2 className="font-outfit text-2xl font-bold text-[var(--foreground)]">{t('experience')}</h2>
@@ -98,7 +98,7 @@ export default function ResumeClient({ education, experience }: ResumeClientProp
               className="relative pl-14"
             >
               {/* Timeline Dot */}
-              <div className="absolute left-[18px] top-1.5 w-3 h-3 rounded-full bg-[var(--gold)] border-2 border-[#1e1e20] shadow-[0_0_0_4px_var(--background),0_0_15px_var(--gold)]" />
+              <div className="absolute left-[18px] top-1.5 w-3 h-3 rounded-full bg-[var(--gold)] border-2 border-[var(--background)] timeline-dot" />
               
               {/* Content */}
               <div className="space-y-2">
