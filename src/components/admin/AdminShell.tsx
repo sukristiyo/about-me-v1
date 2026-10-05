@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, BarChart3, FileText, Briefcase, GraduationCap,
+  LayoutDashboard, BarChart3, Link2, FileText, Briefcase, GraduationCap,
   MessageSquare, MessageCircle, Settings, LogOut, Info,
   Menu, X, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
@@ -18,6 +18,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 const navItems = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { name: "Short Links", href: "/admin/links", icon: Link2 },
   { name: "About Details", href: "/admin/about", icon: Info },
   { name: "Blog", href: "/admin/blog", icon: FileText },
   { name: "Portfolio", href: "/admin/portfolio", icon: Briefcase },

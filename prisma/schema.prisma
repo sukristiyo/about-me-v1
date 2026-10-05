@@ -186,3 +186,23 @@ model AnalyticsEvent {
   @@index([createdAt])
   @@index([name])
 }
+
+model ShortLink {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  targetUrl   String   @db.Text
+  description String?  @db.Text
+  category    String   @default("General")
+  badge       String?
+  icon        String?  @default("Globe")
+  order       Int      @default(0)
+  clicks      Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+}
+
