@@ -380,18 +380,16 @@ export default function ShortLinksPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-            className="gap-1.5 text-xs text-foreground font-medium"
+          <a
+            href="/links"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted text-xs font-medium text-foreground transition-all shadow-sm"
           >
-            <a href="/links" target="_blank" rel="noreferrer">
-              <Smartphone className="h-3.5 w-3.5 text-primary" />
-              Preview Lynk.id
-              <ExternalLink className="h-3 w-3 text-muted-foreground" />
-            </a>
-          </Button>
+            <Smartphone className="h-3.5 w-3.5 text-primary" />
+            Preview Lynk.id
+            <ExternalLink className="h-3 w-3 text-muted-foreground" />
+          </a>
 
           <Button
             variant="outline"
